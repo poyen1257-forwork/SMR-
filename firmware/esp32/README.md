@@ -7,6 +7,7 @@
 | 目錄 | 用途 |
 | --- | --- |
 | `WT901WIFI_ESP32_UDP/` | ESP32 UDP 接收 / 轉發 WT901WIFI 資料的 Arduino sketch |
+| `ESP32_SERIAL_DIAG/` | ESP32-S3 USB Serial 最小診斷程式 |
 | `ESP32_WCMCU230_CAN_TEST/` | ESP32 + WCMCU230/SN65HVD230 CAN 測試 MF5015-V2 的 Arduino sketch |
 | `ESP32_WCMCU230_LOOPBACK_TEST/` | ESP32 TWAI/CAN 自我回送測試，不需連馬達 |
 
@@ -23,6 +24,18 @@ firmware/esp32/WT901WIFI_ESP32_UDP/WT901WIFI_ESP32_UDP.ino
 - [WT901WIFI ESP32 notes](../../docs/README_WT901WIFI_ESP32.md)
 
 ## ESP32 + WCMCU230 CAN 測試
+
+如果燒錄成功但 Serial Monitor 完全沒有輸出，先開這個最小診斷程式：
+
+```text
+firmware/esp32/ESP32_SERIAL_DIAG/ESP32_SERIAL_DIAG.ino
+```
+
+Serial Monitor 設 `115200` baud。正常會每秒印出：
+
+```text
+serial diag ok, count=...
+```
 
 如果只是要先確認 ESP32 與 CAN 程式能跑，先開這個：
 

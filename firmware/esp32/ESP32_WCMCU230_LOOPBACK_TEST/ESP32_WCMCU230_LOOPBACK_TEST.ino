@@ -26,7 +26,6 @@ void setup_twai_loopback() {
       TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NO_ACK);
   general_config.tx_queue_len = 10;
   general_config.rx_queue_len = 20;
-  general_config.self_test = true;
 
   twai_timing_config_t timing_config = TWAI_TIMING_CONFIG_1MBITS();
   twai_filter_config_t filter_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();

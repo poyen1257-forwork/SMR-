@@ -18,6 +18,7 @@ static const uint8_t CMD_MOTOR_RUNNING = 0x88;
 static const uint8_t CMD_READ_STATUS_2 = 0x9C;
 static const uint8_t CMD_SPEED_CLOSED_LOOP = 0xA2;
 
+static bool auto_status = false;
 static uint32_t last_status_ms = 0;
 
 int16_t read_int16_le(const uint8_t *data, int offset) {
@@ -139,13 +140,15 @@ void print_help() {
   Serial.println();
   Serial.println("Commands:");
   Serial.println("  h = help");
-  Serial.println("  s = read MF5015 status 2");
+  Serial.println("  s = read MF5015 status 2 once");
+  Serial.println("  a = toggle auto status read every 1 second");
   Serial.println("  r = motor running command");
   Serial.println("  x = motor stop command");
   Serial.println("  o = motor off command");
   Serial.println("  m = low speed test: 30 dps for 1 second, then stop");
   Serial.println();
-  Serial.println("Default behavior: read status every 1 second. It does not move the motor.");
+  Serial.println("Default behavior: idle. It does not move the motor and does not spam CAN.");
+  Serial.println("First test: type s and confirm RX/MF5015 status before using m.");
   Serial.println();
 }
 
@@ -163,6 +166,9 @@ void handle_serial_command() {
     print_help();
   } else if (c == 's') {
     send_simple_command(CMD_READ_STATUS_2);
+  } else if (c == 'a') {
+    auto_status = !auto_status;
+    Serial.printf("auto status: %s\n", auto_status ? "ON" : "OFF");
   } else if (c == 'r') {
     send_simple_command(CMD_MOTOR_RUNNING);
   } else if (c == 'x') {
@@ -231,7 +237,7 @@ void loop() {
   handle_serial_command();
   receive_frames(10);
 
-  if (millis() - last_status_ms >= 1000) {
+  if (auto_status && millis() - last_status_ms >= 1000) {
     last_status_ms = millis();
     send_simple_command(CMD_READ_STATUS_2);
   }

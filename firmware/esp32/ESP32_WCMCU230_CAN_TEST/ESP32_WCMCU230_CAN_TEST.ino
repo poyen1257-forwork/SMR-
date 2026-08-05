@@ -1,9 +1,10 @@
 #include <Arduino.h>
 #include "driver/twai.h"
 
-// ESP32 TWAI/CAN pins. Change these if your wiring is different.
-static const gpio_num_t CAN_TX_PIN = GPIO_NUM_5;
-static const gpio_num_t CAN_RX_PIN = GPIO_NUM_4;
+// Seeed Studio XIAO ESP32-S3:
+// D4 = GPIO5, D5 = GPIO6.
+static const gpio_num_t CAN_TX_PIN = GPIO_NUM_5;  // XIAO D4 -> WCMCU230 CTX/TXD
+static const gpio_num_t CAN_RX_PIN = GPIO_NUM_6;  // XIAO D5 -> WCMCU230 CRX/RXD
 
 // MF5015-V2 / MF-RMD common CAN settings.
 static const uint8_t MOTOR_ID = 1;
@@ -32,6 +33,26 @@ void print_frame(const twai_message_t &msg) {
     Serial.print(msg.data[i], HEX);
     Serial.print(i + 1 == msg.data_length_code ? '\n' : ' ');
   }
+}
+
+void print_twai_status() {
+  twai_status_info_t status = {};
+  esp_err_t result = twai_get_status_info(&status);
+  if (result != ESP_OK) {
+    Serial.printf("twai_get_status_info failed: %d\n", result);
+    return;
+  }
+
+  Serial.printf(
+      "TWAI status: state=%d tx_queue=%lu rx_queue=%lu tx_err=%lu rx_err=%lu "
+      "tx_failed=%lu bus_error=%lu\n",
+      (int)status.state,
+      (unsigned long)status.msgs_to_tx,
+      (unsigned long)status.msgs_to_rx,
+      (unsigned long)status.tx_error_counter,
+      (unsigned long)status.rx_error_counter,
+      (unsigned long)status.tx_failed_count,
+      (unsigned long)status.bus_error_count);
 }
 
 void print_status_2(const twai_message_t &msg) {
@@ -67,6 +88,12 @@ bool send_frame(uint8_t command, const uint8_t payload[7]) {
   esp_err_t result = twai_transmit(&msg, pdMS_TO_TICKS(100));
   if (result != ESP_OK) {
     Serial.printf("TX failed: %d\n", result);
+    if (result == ESP_ERR_TIMEOUT) {
+      Serial.println("  ESP_ERR_TIMEOUT: CAN frame was not transmitted.");
+      Serial.println("  Most common cause: no CAN ACK from another powered node.");
+      Serial.println("  Check motor power, CANH/CANL wiring, common GND, baudrate, and termination.");
+    }
+    print_twai_status();
     return false;
   }
 
@@ -190,7 +217,7 @@ void setup() {
   Serial.println("  ESP32 3V3  -> WCMCU230 VCC");
   Serial.println("  ESP32 GND  -> WCMCU230 GND -> motor GND");
   Serial.println("  ESP32 GPIO5 -> WCMCU230 CTX/TXD");
-  Serial.println("  ESP32 GPIO4 -> WCMCU230 CRX/RXD");
+  Serial.println("  ESP32 GPIO6 -> WCMCU230 CRX/RXD");
   Serial.println("  WCMCU230 CAN_H -> motor CAN_H");
   Serial.println("  WCMCU230 CAN_L -> motor CAN_L");
   Serial.println("  External 16V + -> motor V+");

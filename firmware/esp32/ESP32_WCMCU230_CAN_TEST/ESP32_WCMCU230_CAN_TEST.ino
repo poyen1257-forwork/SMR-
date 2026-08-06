@@ -79,6 +79,7 @@ bool send_frame(uint8_t command, const uint8_t payload[7]) {
   msg.identifier = MOTOR_TX_ID;
   msg.extd = 0;
   msg.rtr = 0;
+  msg.ss = 1;  // Single-shot: do not keep retrying forever when no node ACKs.
   msg.data_length_code = 8;
   msg.data[0] = command;
 
@@ -94,6 +95,7 @@ bool send_frame(uint8_t command, const uint8_t payload[7]) {
       Serial.println("  Most common cause: no CAN ACK from another powered node.");
       Serial.println("  Check motor power, CANH/CANL wiring, common GND, baudrate, and termination.");
     }
+    twai_clear_transmit_queue();
     print_twai_status();
     return false;
   }
@@ -105,6 +107,13 @@ bool send_frame(uint8_t command, const uint8_t payload[7]) {
 bool send_simple_command(uint8_t command) {
   uint8_t payload[7] = {0, 0, 0, 0, 0, 0, 0};
   return send_frame(command, payload);
+}
+
+void clear_can_queues() {
+  twai_clear_transmit_queue();
+  twai_clear_receive_queue();
+  Serial.println("CAN TX/RX queues cleared.");
+  print_twai_status();
 }
 
 bool send_speed_dps(float dps) {
@@ -142,6 +151,7 @@ void print_help() {
   Serial.println("  h = help");
   Serial.println("  s = read MF5015 status 2 once");
   Serial.println("  a = toggle auto status read every 1 second");
+  Serial.println("  c = clear CAN TX/RX queues");
   Serial.println("  r = motor running command");
   Serial.println("  x = motor stop command");
   Serial.println("  o = motor off command");
@@ -165,10 +175,15 @@ void handle_serial_command() {
   if (c == 'h' || c == '?') {
     print_help();
   } else if (c == 's') {
-    send_simple_command(CMD_READ_STATUS_2);
+    if (send_simple_command(CMD_READ_STATUS_2)) {
+      receive_frames(500);
+      print_twai_status();
+    }
   } else if (c == 'a') {
     auto_status = !auto_status;
     Serial.printf("auto status: %s\n", auto_status ? "ON" : "OFF");
+  } else if (c == 'c') {
+    clear_can_queues();
   } else if (c == 'r') {
     send_simple_command(CMD_MOTOR_RUNNING);
   } else if (c == 'x') {

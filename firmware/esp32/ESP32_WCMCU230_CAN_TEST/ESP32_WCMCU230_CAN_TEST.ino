@@ -74,9 +74,14 @@ void print_status_2(const twai_message_t &msg) {
   Serial.printf("  encoder:     %d\n", encoder_raw);
 }
 
-bool send_frame(uint8_t command, const uint8_t payload[7]) {
+bool is_motor_reply_id(uint32_t identifier) {
+  return (identifier >= 0x141 && identifier <= 0x148) ||
+         (identifier >= 0x241 && identifier <= 0x248);
+}
+
+bool send_frame_to_id(uint32_t can_id, uint8_t command, const uint8_t payload[7]) {
   twai_message_t msg = {};
-  msg.identifier = MOTOR_TX_ID;
+  msg.identifier = can_id;
   msg.extd = 0;
   msg.rtr = 0;
   msg.ss = 1;  // Single-shot: do not keep retrying forever when no node ACKs.
@@ -104,9 +109,18 @@ bool send_frame(uint8_t command, const uint8_t payload[7]) {
   return true;
 }
 
+bool send_frame(uint8_t command, const uint8_t payload[7]) {
+  return send_frame_to_id(MOTOR_TX_ID, command, payload);
+}
+
 bool send_simple_command(uint8_t command) {
   uint8_t payload[7] = {0, 0, 0, 0, 0, 0, 0};
   return send_frame(command, payload);
+}
+
+bool send_simple_command_to_motor_id(uint8_t motor_id, uint8_t command) {
+  uint8_t payload[7] = {0, 0, 0, 0, 0, 0, 0};
+  return send_frame_to_id(0x140 + motor_id, command, payload);
 }
 
 void clear_can_queues() {
@@ -139,10 +153,28 @@ void receive_frames(uint32_t duration_ms) {
 
     print_frame(rx_msg);
 
-    if (rx_msg.identifier == MOTOR_REPLY_ID_1 || rx_msg.identifier == MOTOR_REPLY_ID_2) {
+    if (rx_msg.identifier == MOTOR_REPLY_ID_1 ||
+        rx_msg.identifier == MOTOR_REPLY_ID_2 ||
+        is_motor_reply_id(rx_msg.identifier)) {
       print_status_2(rx_msg);
     }
   }
+}
+
+void scan_motor_ids() {
+  Serial.println("Scanning motor IDs 1..8 with command 0x9C at 1 Mbps...");
+  clear_can_queues();
+
+  for (uint8_t id = 1; id <= 8; id++) {
+    Serial.printf("\nSCAN motor_id=%u can_id=0x%03X\n", id, 0x140 + id);
+    if (send_simple_command_to_motor_id(id, CMD_READ_STATUS_2)) {
+      receive_frames(800);
+    }
+    print_twai_status();
+    delay(150);
+  }
+
+  Serial.println("\nScan complete. If there was no RX, check wiring/baudrate/termination.");
 }
 
 void print_help() {
@@ -150,6 +182,7 @@ void print_help() {
   Serial.println("Commands:");
   Serial.println("  h = help");
   Serial.println("  s = read MF5015 status 2 once");
+  Serial.println("  i = scan motor IDs 1..8 with read status 2");
   Serial.println("  a = toggle auto status read every 1 second");
   Serial.println("  c = clear CAN TX/RX queues");
   Serial.println("  r = motor running command");
@@ -179,6 +212,8 @@ void handle_serial_command() {
       receive_frames(500);
       print_twai_status();
     }
+  } else if (c == 'i') {
+    scan_motor_ids();
   } else if (c == 'a') {
     auto_status = !auto_status;
     Serial.printf("auto status: %s\n", auto_status ? "ON" : "OFF");

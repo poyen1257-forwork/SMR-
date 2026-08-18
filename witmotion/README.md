@@ -58,7 +58,7 @@ User server port: 1399
 從 repository 根目錄執行：
 
 ```powershell
-python sensors/witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet
+python witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet
 ```
 
 成功時會看到類似：
@@ -73,7 +73,7 @@ UDP #1 from 10.5.98.xx:xxxxx, size=...
 ### 4. 印出解析後資料
 
 ```powershell
-python sensors/witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet --print-each
+python witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet --print-each
 ```
 
 會看到類似：
@@ -98,13 +98,13 @@ ANGLE ...
 確認 UDP 資料正常後執行：
 
 ```powershell
-python sensors/witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399
+python witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399
 ```
 
 如果想使用原始漂移顯示，不啟用靜止鎖定：
 
 ```powershell
-python sensors/witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399 --no-stationary-lock
+python witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399 --no-stationary-lock
 ```
 
 ### 6. 常見問題
@@ -126,13 +126,13 @@ python sensors/witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399
 ## COM 版常用指令
 
 ```powershell
-python sensors/witmotion/BWT901CL_reader.py list
-python sensors/witmotion/BWT901CL_reader.py read --port COM4
-python sensors/witmotion/BWT901CL_visualizer_COM.py --port COM4
-python sensors/witmotion/WT901WIFI_reader.py serial --list
+python witmotion/BWT901CL_reader.py list
+python witmotion/BWT901CL_reader.py read --port COM4
+python witmotion/BWT901CL_visualizer_COM.py --port COM4
+python witmotion/WT901WIFI_reader.py serial --list
 ```
 
-如果已經進到 `sensors/witmotion/` 目錄，可以省略前面的路徑：
+如果已經進到 `witmotion/` 目錄，可以省略前面的路徑：
 
 ```powershell
 python BWT901CL_reader.py list

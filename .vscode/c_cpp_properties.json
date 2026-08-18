@@ -1,0 +1,52 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "Arduino XIAO ESP32-S3",
+            "compilerPath": "C:\\Users\\e11512\\AppData\\Local\\Arduino15\\packages\\esp32\\tools\\esp-x32\\2601\\bin\\xtensa-esp32s3-elf-g++.exe",
+            "includePath": [
+                "${workspaceFolder}/esp32/ESP32_WCMCU230_CAN_TEST",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11/cores/esp32",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11/variants/XIAO_ESP32S3",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/newlib/platform_include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/freertos/config/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/freertos/config/include/freertos",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/freertos/config/xtensa/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/freertos/FreeRTOS-Kernel/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/freertos/FreeRTOS-Kernel/portable/xtensa/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/freertos/esp_additions/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/driver/twai/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/esp_common/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/esp_hw_support/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/esp_system/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/hal/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/hal/esp32s3/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/soc/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/soc/esp32s3/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/xtensa/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/xtensa/esp32s3/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/**",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/qio_qspi/include",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601/xtensa-esp-elf/include/**",
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601/lib/gcc/xtensa-esp-elf/14.2.0/include/**"
+            ],
+            "forcedInclude": [
+                "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11/cores/esp32/Arduino.h"
+            ],
+            "defines": [
+                "ARDUINO=10607",
+                "ESP32",
+                "ARDUINO_ARCH_ESP32",
+                "ARDUINO_XIAO_ESP32S3",
+                "ARDUINO_USB_MODE=1",
+                "ARDUINO_USB_CDC_ON_BOOT=1",
+                "ARDUINO_USB_MSC_ON_BOOT=0",
+                "ARDUINO_USB_DFU_ON_BOOT=0",
+                "F_CPU=240000000L"
+            ],
+            "intelliSenseMode": "gcc-x64",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17"
+        }
+    ]
+}

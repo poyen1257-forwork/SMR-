@@ -1,0 +1,41 @@
+{
+    "arduino.useArduinoCli": true,
+    "arduino.path": "C:\\Users\\e11512\\AppData\\Local\\Programs\\Arduino IDE\\resources\\app\\lib\\backend\\resources",
+    "arduino.commandPath": "arduino-cli.exe",
+    "arduino.additionalUrls": [
+        "https://jihulab.com/esp-mirror/espressif/arduino-esp32/-/raw/gh-pages/package_esp32_index_cn.json"
+    ],
+    "arduino.analyzeOnOpen": false,
+    "arduino.analyzeOnSettingChange": false,
+    "arduino.clearOutputOnBuild": true,
+    "C_Cpp.default.compilerPath": "C:\\Users\\e11512\\AppData\\Local\\Arduino15\\packages\\esp32\\tools\\esp-x32\\2601\\bin\\xtensa-esp32s3-elf-g++.exe",
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    "C_Cpp.default.cStandard": "gnu17",
+    "C_Cpp.default.cppStandard": "gnu++17",
+    "C_Cpp.default.defines": [
+        "ARDUINO=10819",
+        "ESP32",
+        "ARDUINO_ARCH_ESP32",
+        "ARDUINO_XIAO_ESP32S3",
+        "ARDUINO_USB_MODE=1"
+    ],
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "C:/Users/e11512/Documents/Arduino/libraries/**",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11/cores/esp32",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11/variants/XIAO_ESP32S3",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11/libraries/**",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include/**",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601/xtensa-esp-elf/include",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601/xtensa-esp-elf/sys-include",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601/lib/gcc/xtensa-esp-elf/14.2.0/include",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601/lib/gcc/xtensa-esp-elf/14.2.0/include-fixed"
+    ],
+    "C_Cpp.default.browse.path": [
+        "${workspaceFolder}",
+        "C:/Users/e11512/Documents/Arduino/libraries",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/hardware/esp32/3.3.11",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp32s3-libs/3.3.11/include",
+        "C:/Users/e11512/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2601"
+    ]
+}

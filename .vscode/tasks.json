@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Arduino: 編譯 XIAO ESP32-S3",
+            "type": "process",
+            "command": "C:\\Users\\e11512\\AppData\\Local\\Programs\\Arduino IDE\\resources\\app\\lib\\backend\\resources\\arduino-cli.exe",
+            "args": [
+                "compile",
+                "--fqbn",
+                "esp32:esp32:XIAO_ESP32S3:JTAGAdapter=default,PSRAM=disabled,FlashMode=qio,FlashSize=8M,LoopCore=1,EventsCore=1,USBMode=hwcdc,CDCOnBoot=default,MSCOnBoot=default,DFUOnBoot=default,UploadMode=default,PartitionScheme=default_8MB,CPUFreq=240,UploadSpeed=115200,DebugLevel=none,EraseFlash=none",
+                "--build-path",
+                "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\ESP32_WCMCU230_CAN_TEST",
+                "${workspaceFolder}\\esp32\\ESP32_WCMCU230_CAN_TEST"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        },
+        {
+            "label": "Arduino: 上傳 XIAO ESP32-S3 到 COM7",
+            "type": "process",
+            "command": "C:\\Users\\e11512\\AppData\\Local\\Programs\\Arduino IDE\\resources\\app\\lib\\backend\\resources\\arduino-cli.exe",
+            "args": [
+                "upload",
+                "--fqbn",
+                "esp32:esp32:XIAO_ESP32S3:JTAGAdapter=default,PSRAM=disabled,FlashMode=qio,FlashSize=8M,LoopCore=1,EventsCore=1,USBMode=hwcdc,CDCOnBoot=default,MSCOnBoot=default,DFUOnBoot=default,UploadMode=default,PartitionScheme=default_8MB,CPUFreq=240,UploadSpeed=115200,DebugLevel=none,EraseFlash=none",
+                "--port",
+                "COM7",
+                "--input-dir",
+                "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\ESP32_WCMCU230_CAN_TEST",
+                "${workspaceFolder}\\esp32\\ESP32_WCMCU230_CAN_TEST"
+            ],
+            "dependsOn": "Arduino: 編譯 XIAO ESP32-S3",
+            "dependsOrder": "sequence",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        }
+    ]
+}

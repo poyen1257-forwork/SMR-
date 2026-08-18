@@ -1,10 +1,15 @@
 #include <Arduino.h>
 #include "driver/twai.h"
 
-// Seeed Studio XIAO ESP32-S3:
-// D4 = GPIO5, D5 = GPIO6.
-static const gpio_num_t CAN_TX_PIN = GPIO_NUM_5;  // XIAO D4 -> WCMCU230 CTX/TXD
-static const gpio_num_t CAN_RX_PIN = GPIO_NUM_6;  // XIAO D5 -> WCMCU230 CRX/RXD
+#if !ARDUINO_USB_CDC_ON_BOOT
+#error "D6/D7 are UART0 pins. Enable USB CDC On Boot before using them for CAN."
+#endif
+
+// Seeed Studio XIAO ESP32-S3: D6 = GPIO43, D7 = GPIO44.
+static const gpio_num_t CAN_TX_PIN = GPIO_NUM_43;  // XIAO D6 -> WCMCU230 CTX/TXD
+static const gpio_num_t CAN_RX_PIN = GPIO_NUM_44;  // XIAO D7 -> WCMCU230 CRX/RXD
+static_assert(D6 == 43, "Wrong board: XIAO ESP32-S3 D6 must be GPIO43");
+static_assert(D7 == 44, "Wrong board: XIAO ESP32-S3 D7 must be GPIO44");
 
 static const uint32_t TEST_CAN_ID = 0x123;
 static uint32_t tx_count = 0;
@@ -102,8 +107,8 @@ void print_help() {
   Serial.println("ESP32 + WCMCU230 loopback test");
   Serial.println("Board: Seeed Studio XIAO ESP32-S3");
   Serial.println("Default pins:");
-  Serial.println("  XIAO D4 / GPIO5 -> WCMCU230 CTX/TXD");
-  Serial.println("  XIAO D5 / GPIO6 -> WCMCU230 CRX/RXD");
+  Serial.println("  XIAO D6 / GPIO43 -> WCMCU230 CTX/TXD");
+  Serial.println("  XIAO D7 / GPIO44 -> WCMCU230 CRX/RXD");
   Serial.println("  XIAO 3V3        -> WCMCU230 3V3");
   Serial.println("  XIAO GND        -> WCMCU230 GND");
   Serial.println();

@@ -6,9 +6,9 @@
 
 | 目錄 | 內容 |
 | --- | --- |
-| `motors/mf5015v2/` | MF5015-V2 馬達 CAN 控制程式與入門筆記 |
-| `sensors/witmotion/` | WT901 / BWT901CL 感測器讀取、Wi-Fi 測試、視覺化工具 |
-| `firmware/esp32/` | ESP32 Arduino 韌體 |
+| `mf5015v2/` | MF5015-V2 馬達 CAN 控制程式、手冊圖片與入門筆記 |
+| `witmotion/` | WT901 / BWT901CL 感測器讀取、Wi-Fi 測試、視覺化工具 |
+| `esp32/` | ESP32 Arduino 韌體與 CAN 測試程式 |
 | `docs/` | 共用文件、資料格式、硬體設定筆記 |
 
 ## 快速開始
@@ -44,37 +44,37 @@ User server port: 1399
 在電腦端接收 UDP 原始資料：
 
 ```powershell
-python sensors/witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet
+python witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet
 ```
 
 如果要印出解析後的 ACC / GYRO / ANGLE：
 
 ```powershell
-python sensors/witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet --print-each
+python witmotion/WT901WIFI_reader.py udp --port 1399 --raw-packet --print-each
 ```
 
 確認資料正常後，開啟 Wi-Fi 版視覺化：
 
 ```powershell
-python sensors/witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399
+python witmotion/BWT901CL_visualizer_WIFI.py --mode udp --wifi-port 1399
 ```
 
 更多細節請看：
 
-- [WitMotion sensors guide](sensors/witmotion/README.md)
+- [WitMotion sensors guide](witmotion/README.md)
 - [WitMotion record format](docs/WITMOTION_RECORD_FORMAT.md)
 - [WT901WIFI ESP32 notes](docs/README_WT901WIFI_ESP32.md)
 
 ### MF5015-V2 馬達
 
 ```powershell
-python motors/mf5015v2/mf5015v2_can.py --help
-python motors/mf5015v2/mf5015v2_can.py --interface slcan --channel COM3 --motor-id 1 status
+python mf5015v2/mf5015v2_can.py --help
+python mf5015v2/mf5015v2_can.py --interface slcan --channel COM3 --motor-id 1 status
 ```
 
 教學文件：
 
-- [MF5015-V2 beginner guide](motors/mf5015v2/MF5015V2_BEGINNER_GUIDE.md)
+- [MF5015-V2 beginner guide](mf5015v2/MF5015V2_BEGINNER_GUIDE.md)
 
 ## 開發流程
 

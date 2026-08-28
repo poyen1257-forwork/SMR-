@@ -30,11 +30,15 @@ r        Read motor state
 m 0      Command zero speed
 m 30     Run continuously at 30 dps
 m 360    Run continuously at 360 dps
+n 180 30 Run at 30 dps for 6 seconds, then send m 0 (about 180 degrees)
 s        Soft stop: reduce 10 dps every 100 ms
 q        Send s, close the serial port, and exit Python
 ```
 
-The valid speed range is `0..360` dps. The program also sends `s` when it exits.
+The valid speed range is `0..360` dps. For `n`, the angle range is `0..360`
+degrees. A nonzero angle requires a speed from `1..360` dps. The ESP32 only
+receives `m <speed>` and `m 0`; Python calculates `seconds = angle / speed`.
+The program also sends `s` when it exits.
 
 ## One-command test
 

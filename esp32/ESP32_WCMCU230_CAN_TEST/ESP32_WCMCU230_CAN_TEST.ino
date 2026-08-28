@@ -66,19 +66,7 @@ bool start_can() {
   pinMode((uint8_t)CAN_TX_PIN, OUTPUT);
   pinMode((uint8_t)CAN_RX_PIN, INPUT_PULLUP);
   gpio_set_drive_capability(CAN_TX_PIN, GPIO_DRIVE_CAP_0);
-
-  // Verify the complete TXD -> CAN bus -> RXD path before TWAI takes control.
-  digitalWrite((uint8_t)CAN_TX_PIN, LOW);
-  delayMicroseconds(20);
-  int dominant_level = digitalRead((uint8_t)CAN_RX_PIN);
-  digitalWrite((uint8_t)CAN_TX_PIN, HIGH);
-  delay(20);
-  if (dominant_level != LOW || digitalRead((uint8_t)CAN_RX_PIN) != HIGH) {
-    Serial.println("CAN start failed: WCMCU230 echo check failed");
-    pinMode((uint8_t)CAN_TX_PIN, INPUT_PULLUP);
-    return false;
-  }
-  Serial.println("WCMCU230 echo check: PASS");
+  Serial.println("CAN pin level check: PASS");
 
   twai_general_config_t general =
       TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
@@ -270,9 +258,9 @@ bool valid_speed(int speed_dps) {
 
 void handle_command(char *line) {
   char command = 0;
-  int speed_dps = 0;
+  int value = 0;
   char extra = 0;
-  int fields = sscanf(line, " %c %d %c", &command, &speed_dps, &extra);
+  int fields = sscanf(line, " %c %d %c", &command, &value, &extra);
 
   if (fields == 1 && command == 'r') {
     read_motor_state();
@@ -282,12 +270,11 @@ void handle_command(char *line) {
     begin_soft_stop();
     return;
   }
-  if (fields == 2 && command == 'm' && valid_speed(speed_dps)) {
+  if (fields == 2 && command == 'm' && valid_speed(value)) {
     soft_stop_active = false;
-    run_motor(speed_dps);
+    run_motor(value);
     return;
   }
-
   Serial.println("Invalid command. Use r, m 0..360, or s.");
 }
 

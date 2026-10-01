@@ -1,5 +1,7 @@
 # Documentation
 
+- [SMR 程式運作框架](SMR_PROGRAM_ARCHITECTURE.md)
+
 這個資料夾放共用文件與資料格式說明。
 
 ## 文件

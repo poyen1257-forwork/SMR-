@@ -2,7 +2,8 @@
     "port": "COM7",
     "configuration": "JTAGAdapter=default,PSRAM=disabled,FlashMode=qio,FlashSize=8M,LoopCore=1,EventsCore=1,USBMode=hwcdc,CDCOnBoot=default,MSCOnBoot=default,DFUOnBoot=default,UploadMode=default,PartitionScheme=default_8MB,CPUFreq=240,UploadSpeed=115200,DebugLevel=none,EraseFlash=none",
     "board": "esp32:esp32:XIAO_ESP32S3",
-    "sketch": "esp32\\ESP32_WCMCU230_CAN_TEST\\ESP32_WCMCU230_CAN_TEST.ino",
-    "output": "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\ESP32_WCMCU230_CAN_TEST",
-    "intelliSenseGen": "disable"
+    "sketch": "esp32\\mf5015v2_sample\\mf5015v2_sample.ino",
+    "output": "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\mf5015v2_sample",
+    "intelliSenseGen": "disable",
+    "programmer": "esptool"
 }

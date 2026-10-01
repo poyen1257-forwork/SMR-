@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <limits.h>
+#include <math.h>
+#include "esp_timer.h"
 #include "driver/twai.h"
 
 #if !ARDUINO_USB_CDC_ON_BOOT
@@ -11,18 +14,27 @@
 static const gpio_num_t CAN_TX_PIN = GPIO_NUM_43;
 static const gpio_num_t CAN_RX_PIN = GPIO_NUM_44;
 static const uint32_t MOTOR_CAN_ID = 0x141;
+static const uint8_t READ_MULTI_TURN_ANGLE = 0x92;
 static const uint8_t READ_STATE_1 = 0x9A;
 static const uint8_t SPEED_CONTROL = 0xA2;
+static const uint8_t POSITION_CONTROL_SPEED = 0xA4;
 static const uint8_t MOTOR_STOP = 0x81;
 
-static const int MIN_SPEED_DPS = 0;
-static const int MAX_SPEED_DPS = 360;
+static const int MIN_SPEED_DPS = -720;
+static const int MAX_SPEED_DPS = 720;
+static const int MIN_POSITION_SPEED_DPS = 1;
+static const int MAX_POSITION_SPEED_DPS = 720;
+static const int SOFT_STOP_STEP_DPS = 30;
 
 static bool can_ready = false;
 static bool soft_stop_active = false;
 static uint32_t next_soft_stop_step_at = 0;
 static int commanded_speed_dps = 0;
-static char command_buffer[32] = {};
+static bool position_target_initialized = false;
+static int32_t position_target_cdeg = 0;
+static uint32_t position_commands_sent = 0;
+static uint32_t last_position_report_at = 0;
+static char command_buffer[96] = {};
 static size_t command_length = 0;
 static uint32_t last_command_byte_at = 0;
 
@@ -108,7 +120,9 @@ bool can_exchange(const uint8_t data[8], uint8_t expected_command,
   twai_message_t tx = {};
   tx.identifier = MOTOR_CAN_ID;
   tx.data_length_code = 8;
-  tx.ss = 1;
+  // Normal mode retries a frame when an ACK is briefly missed. Do not use
+  // single-shot mode for a live motor control bus.
+  tx.ss = 0;
   memcpy(tx.data, data, 8);
 
   uint32_t old_alerts = 0;
@@ -151,7 +165,9 @@ bool can_exchange(const uint8_t data[8], uint8_t expected_command,
       continue;
     }
     print_frame("RX", rx);
-    if (!rx.extd && !rx.rtr && rx.identifier == MOTOR_CAN_ID &&
+    bool from_motor = rx.identifier == MOTOR_CAN_ID ||
+                      rx.identifier == MOTOR_CAN_ID + 0x100;
+    if (!rx.extd && !rx.rtr && from_motor &&
         rx.data_length_code == 8 && rx.data[0] == expected_command) {
       if (reply != nullptr) {
         *reply = rx;
@@ -161,6 +177,58 @@ bool can_exchange(const uint8_t data[8], uint8_t expected_command,
   }
 
   Serial.println("RX timeout");
+  return false;
+}
+
+bool can_send_position_target(const uint8_t data[8], bool wait_for_tx_success,
+                              int64_t *can_tx_us) {
+  if (!can_ready) {
+    Serial.println("CAN is not ready");
+    return false;
+  }
+
+  // Position tracking can send a new target every 10 ms. Never wait for the
+  // response here; serial input must remain available for the next target.
+  twai_message_t stale = {};
+  while (twai_receive(&stale, 0) == ESP_OK) {
+  }
+
+  twai_message_t tx = {};
+  tx.identifier = MOTOR_CAN_ID;
+  tx.data_length_code = 8;
+  memcpy(tx.data, data, 8);
+
+  uint32_t old_alerts = 0;
+  twai_read_alerts(&old_alerts, 0);
+  if (twai_transmit(&tx, 0) != ESP_OK) {
+    Serial.println("Position TX queue failed");
+    print_status();
+    return false;
+  }
+
+  if (!wait_for_tx_success) {
+    return true;
+  }
+
+  uint32_t started = millis();
+  while (millis() - started < 30) {
+    uint32_t alerts = 0;
+    if (twai_read_alerts(&alerts, pdMS_TO_TICKS(5)) != ESP_OK) {
+      continue;
+    }
+    if (alerts & TWAI_ALERT_TX_SUCCESS) {
+      if (can_tx_us != nullptr) {
+        *can_tx_us = esp_timer_get_time();
+      }
+      return true;
+    }
+    if (alerts & (TWAI_ALERT_TX_FAILED | TWAI_ALERT_BUS_OFF)) {
+      break;
+    }
+  }
+
+  Serial.println("Position TX failed: no CAN ACK");
+  print_status();
   return false;
 }
 
@@ -200,6 +268,89 @@ bool run_motor(int speed_dps) {
   return true;
 }
 
+bool read_motor_position(int32_t *position_cdeg) {
+  const uint8_t request[8] = {READ_MULTI_TURN_ANGLE, 0, 0, 0, 0, 0, 0, 0};
+  twai_message_t reply = {};
+  if (!can_exchange(request, READ_MULTI_TURN_ANGLE, &reply)) {
+    return false;
+  }
+
+  uint32_t raw = (uint32_t)reply.data[4] |
+                 ((uint32_t)reply.data[5] << 8) |
+                 ((uint32_t)reply.data[6] << 16) |
+                 ((uint32_t)reply.data[7] << 24);
+  *position_cdeg = (int32_t)raw;
+  Serial.printf("Motor multi-turn position: %.2f deg\n", *position_cdeg * 0.01f);
+  return true;
+}
+
+bool move_motor_relative(float delta_degrees, int max_speed_dps,
+                         bool report_latency = false, uint32_t sequence = 0,
+                         uint64_t imu_tx_ns = 0, uint64_t bridge_tx_ns = 0,
+                         int64_t esp_rx_us = 0) {
+  if (!isfinite(delta_degrees) || max_speed_dps < MIN_POSITION_SPEED_DPS ||
+      max_speed_dps > MAX_POSITION_SPEED_DPS) {
+    Serial.println("Position command: angle must be finite; speed must be 1..720 dps.");
+    return false;
+  }
+
+  int32_t delta_cdeg = (int32_t)lroundf(delta_degrees * 100.0f);
+  if (delta_cdeg == 0) {
+    Serial.println("Position command ignored: magnitude is below 0.005 deg.");
+    return true;
+  }
+
+  if (!position_target_initialized) {
+    if (!read_motor_position(&position_target_cdeg)) {
+      Serial.println("Position command cancelled: cannot read motor position.");
+      return false;
+    }
+    position_target_initialized = true;
+  }
+
+  int64_t target = (int64_t)position_target_cdeg + delta_cdeg;
+  if (target < INT32_MIN || target > INT32_MAX) {
+    Serial.println("Position command cancelled: target angle is outside protocol range.");
+    return false;
+  }
+
+  int32_t target_cdeg = (int32_t)target;
+  const uint8_t position_command[8] = {
+      POSITION_CONTROL_SPEED,
+      0,
+      (uint8_t)(max_speed_dps & 0xFF),
+      (uint8_t)((max_speed_dps >> 8) & 0xFF),
+      (uint8_t)(target_cdeg & 0xFF),
+      (uint8_t)((target_cdeg >> 8) & 0xFF),
+      (uint8_t)((target_cdeg >> 16) & 0xFF),
+      (uint8_t)((target_cdeg >> 24) & 0xFF)};
+  int64_t esp_can_tx_us = 0;
+  if (!can_send_position_target(position_command, report_latency,
+                                &esp_can_tx_us)) {
+    Serial.println("Position command failed");
+    return false;
+  }
+
+  soft_stop_active = false;
+  commanded_speed_dps = 0;
+  position_target_cdeg = target_cdeg;
+  position_commands_sent++;
+  if (report_latency) {
+    Serial.printf("LAT,%lu,%llu,%llu,%lld,%lld\n", (unsigned long)sequence,
+                  (unsigned long long)imu_tx_ns,
+                  (unsigned long long)bridge_tx_ns, (long long)esp_rx_us,
+                  (long long)esp_can_tx_us);
+  }
+  if (millis() - last_position_report_at >= 500) {
+    Serial.printf("Position tracking: target=%.2f deg, speed=%d dps, sent=%lu\n",
+                  target_cdeg * 0.01f, max_speed_dps,
+                  (unsigned long)position_commands_sent);
+    position_commands_sent = 0;
+    last_position_report_at = millis();
+  }
+  return true;
+}
+
 bool stop_motor_immediately() {
   const uint8_t stop_command[8] = {MOTOR_STOP, 0, 0, 0, 0, 0, 0, 0};
   soft_stop_active = false;
@@ -213,15 +364,16 @@ bool stop_motor_immediately() {
 }
 
 void begin_soft_stop() {
-  if (commanded_speed_dps <= 0) {
+  if (commanded_speed_dps == 0) {
     stop_motor_immediately();
     return;
   }
 
   soft_stop_active = true;
-  next_soft_stop_step_at = millis();
-  Serial.printf("Soft stop: %d dps, decrease 10 dps every 100 ms\n",
-                commanded_speed_dps);
+  next_soft_stop_step_at = millis() + 100;
+  Serial.printf("Soft stop: %d dps, reduce by %d dps every 100 ms\n",
+                commanded_speed_dps,
+                SOFT_STOP_STEP_DPS);
 }
 
 void update_soft_stop() {
@@ -230,9 +382,17 @@ void update_soft_stop() {
     return;
   }
 
-  int next_speed = commanded_speed_dps - 10;
-  if (next_speed < 0) {
-    next_speed = 0;
+  int next_speed = commanded_speed_dps;
+  if (next_speed > 0) {
+    next_speed -= SOFT_STOP_STEP_DPS;
+    if (next_speed < 0) {
+      next_speed = 0;
+    }
+  } else {
+    next_speed += SOFT_STOP_STEP_DPS;
+    if (next_speed > 0) {
+      next_speed = 0;
+    }
   }
 
   if (!run_motor(next_speed)) {
@@ -250,7 +410,7 @@ void update_soft_stop() {
 
 bool valid_speed(int speed_dps) {
   if (speed_dps < MIN_SPEED_DPS || speed_dps > MAX_SPEED_DPS) {
-    Serial.println("Speed must be an integer from 0 to 360 dps.");
+    Serial.println("Speed must be an integer from -720 to 720 dps.");
     return false;
   }
   return true;
@@ -258,34 +418,60 @@ bool valid_speed(int speed_dps) {
 
 void handle_command(char *line) {
   char command = 0;
-  int value = 0;
   char extra = 0;
-  int fields = sscanf(line, " %c %d %c", &command, &value, &extra);
+  if (sscanf(line, " %c", &command) != 1) {
+    return;
+  }
 
-  if (fields == 1 && command == 'r') {
+  if (command == 'r' && sscanf(line, " %c %c", &command, &extra) == 1) {
     read_motor_state();
     return;
   }
-  if (fields == 1 && command == 's') {
+  if (command == 's' && sscanf(line, " %c %c", &command, &extra) == 1) {
     begin_soft_stop();
     return;
   }
-  if (fields == 2 && command == 'm' && valid_speed(value)) {
-    soft_stop_active = false;
-    run_motor(value);
-    return;
+  if (command == 'm') {
+    int speed_dps = 0;
+    if (sscanf(line, " %c %d %c", &command, &speed_dps, &extra) == 2 &&
+        valid_speed(speed_dps)) {
+      soft_stop_active = false;
+      run_motor(speed_dps);
+      return;
+    }
   }
-  Serial.println("Invalid command. Use r, m 0..360, or s.");
+  if (command == 'n') {
+    float delta_degrees = 0.0f;
+    int max_speed_dps = 0;
+    uint32_t sequence = 0;
+    uint64_t imu_tx_ns = 0;
+    uint64_t bridge_tx_ns = 0;
+    int fields = sscanf(line, " %c %f %d %lu %llu %llu %c", &command,
+                        &delta_degrees, &max_speed_dps, &sequence, &imu_tx_ns,
+                        &bridge_tx_ns, &extra);
+    if (fields == 3) {
+      move_motor_relative(delta_degrees, max_speed_dps);
+      return;
+    }
+    if (fields == 6) {
+      const int64_t esp_rx_us = esp_timer_get_time();
+      move_motor_relative(delta_degrees, max_speed_dps, true, sequence,
+                          imu_tx_ns, bridge_tx_ns, esp_rx_us);
+      return;
+    }
+  }
+  Serial.println("Invalid command. Use r, m -720..720, n <deg> <1..720 dps>, or s.");
 }
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
   Serial.println();
-  Serial.println("MF4015V2 CAN test");
+  Serial.println("MF5015V2 CAN test (D6 TX, D7 RX)");
   Serial.println("r = read motor state");
-  Serial.println("m <0..360> = run continuously at the given dps");
-  Serial.println("s = soft stop (minus 10 dps every 100 ms)");
+  Serial.println("m <-720..720> = run continuously; negative reverses direction");
+  Serial.println("n <degrees> <speed> = move relative angle using position control");
+  Serial.println("s = soft stop (reduce speed by 30 dps every 100 ms)");
   can_ready = start_can();
 }
 

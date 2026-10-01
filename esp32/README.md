@@ -6,18 +6,34 @@
 
 | 檔案 | 用途 |
 | --- | --- |
-| `ESP32_WCMCU230_CAN_TEST/` | XIAO ESP32-S3 + WCMCU230 與 MF4015-V2 / MF5015-V2 CAN 通訊測試 |
-| `ESP32_WCMCU230_LOOPBACK_TEST/` | ESP32 TWAI/CAN 自我回送測試，不需連馬達 |
-| `esp32can_basic/` | 使用第三方 ESP32CAN 函式庫的舊版基礎範例 |
+| `mf5015v2_sample/` | XIAO ESP32-S3 + WCMCU230 與 MF4015-V2 / MF5015-V2 CAN 通訊測試 |
+| `wcmcu_test/` | ESP32 TWAI/CAN 自我回送測試，不需連馬達 |
+| `can_basic/` | 參考 ESP32 CAN demo 改寫的最小 TWAI 通訊範例，只讀取馬達狀態 |
 
 ## 使用方式
 
 ## ESP32 + WCMCU230 CAN 測試
 
+### 最小通訊測試
+
+先開啟：
+
+```text
+esp32/can_basic/can_basic.ino
+```
+
+這份程式使用 ESP32 Arduino Core 內建的 `driver/twai.h`，不需要另外安裝
+`ESP32CAN` 函式庫。Serial Monitor 設為 `115200`，輸入 `r` 後只會送出
+`CAN ID 0x141`、命令 `0x9A` 與 `0x9C` 的讀取狀態封包，不會命令馬達轉動。
+
+參考程式：
+
+- [nhatuan84/esp32-can-protocol-demo](https://github.com/nhatuan84/esp32-can-protocol-demo)
+
 如果只是要先確認 ESP32 TWAI 程式能執行，先開啟：
 
 ```text
-esp32/ESP32_WCMCU230_LOOPBACK_TEST/ESP32_WCMCU230_LOOPBACK_TEST.ino
+esp32/wcmcu_test/wcmcu_test.ino
 ```
 
 預設腳位：
@@ -47,7 +63,7 @@ WCMCU230 CAN_L -> 馬達 CAN_L
 用 Arduino IDE 開啟：
 
 ```text
-esp32/ESP32_WCMCU230_CAN_TEST/ESP32_WCMCU230_CAN_TEST.ino
+esp32/mf5015v2_sample/mf5015v2_sample.ino
 ```
 
 Arduino IDE 的 `USB CDC On Boot` 必須設為 `Enabled`，Serial Monitor 設為 `115200` baud。

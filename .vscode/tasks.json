@@ -10,8 +10,8 @@
                 "--fqbn",
                 "esp32:esp32:XIAO_ESP32S3:JTAGAdapter=default,PSRAM=disabled,FlashMode=qio,FlashSize=8M,LoopCore=1,EventsCore=1,USBMode=hwcdc,CDCOnBoot=default,MSCOnBoot=default,DFUOnBoot=default,UploadMode=default,PartitionScheme=default_8MB,CPUFreq=240,UploadSpeed=115200,DebugLevel=none,EraseFlash=none",
                 "--build-path",
-                "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\ESP32_WCMCU230_CAN_TEST",
-                "${workspaceFolder}\\esp32\\ESP32_WCMCU230_CAN_TEST"
+                "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\can_basic",
+                "${workspaceFolder}\\esp32\\can_basic"
             ],
             "group": {
                 "kind": "build",
@@ -35,8 +35,8 @@
                 "--port",
                 "COM7",
                 "--input-dir",
-                "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\ESP32_WCMCU230_CAN_TEST",
-                "${workspaceFolder}\\esp32\\ESP32_WCMCU230_CAN_TEST"
+                "C:\\Users\\e11512\\AppData\\Local\\Temp\\arduino-vscode\\can_basic",
+                "${workspaceFolder}\\esp32\\can_basic"
             ],
             "dependsOn": "Arduino: 編譯 XIAO ESP32-S3",
             "dependsOrder": "sequence",

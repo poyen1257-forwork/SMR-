@@ -45,6 +45,13 @@ def int32_le(data, offset):
     return struct.unpack_from("<i", bytes(data), offset)[0]
 
 
+def int56_le(data, offset):
+    raw = int.from_bytes(bytes(data[offset : offset + 7]), "little")
+    if raw & (1 << 55):
+        raw -= 1 << 56
+    return raw
+
+
 def clamp_int16(value, name):
     if value < -32768 or value > 32767:
         raise ValueError(f"{name} is outside int16 range: {value}")
@@ -143,7 +150,7 @@ class Mf5015Can:
 
     def read_multi_turn_angle_deg(self):
         msg = self.send(CMD_READ_MULTI_TURN_ANGLE)
-        raw = int32_le(msg.data, 4)
+        raw = int56_le(msg.data, 1)
         return raw * 0.01
 
     def read_single_turn_angle_deg(self):
